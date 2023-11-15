@@ -3,6 +3,9 @@ import "./style.css";
 import leaflet from "leaflet";
 import luck from "./luck";
 import "./leafletWorkaround";
+import { Board } from "./board.ts";
+import * as constants from "./constants";
+import { Coin } from "./coin.ts";
 
 
 const MERRILL_CLASSROOM = leaflet.latLng({
@@ -10,18 +13,13 @@ const MERRILL_CLASSROOM = leaflet.latLng({
     lng: - 122.0533
 });
 
-const GAMEPLAY_ZOOM_LEVEL = 19;
-const TILE_DEGREES = 1e-4;
-const NEIGHBORHOOD_SIZE = 8;
-const PIT_SPAWN_PROBABILITY = 0.1;
-
 const mapContainer = document.querySelector<HTMLElement>("#map")!;
 
 const map = leaflet.map(mapContainer, {
     center: MERRILL_CLASSROOM,
-    zoom: GAMEPLAY_ZOOM_LEVEL,
-    minZoom: GAMEPLAY_ZOOM_LEVEL,
-    maxZoom: GAMEPLAY_ZOOM_LEVEL,
+    zoom: constants.GAMEPLAY_ZOOM_LEVEL,
+    minZoom: constants.GAMEPLAY_ZOOM_LEVEL,
+    maxZoom: constants.GAMEPLAY_ZOOM_LEVEL,
     zoomControl: false,
     scrollWheelZoom: false
 });
@@ -46,21 +44,32 @@ sensorButton.addEventListener("click", () => {
 let points = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No points yet...";
+const board = new Board(constants.TILE_DEGREES, constants.NEIGHBORHOOD_SIZE);
 
 function makePit(i: number, j: number) {
-    const bounds = leaflet.latLngBounds([
-        [MERRILL_CLASSROOM.lat + i * TILE_DEGREES,
-        MERRILL_CLASSROOM.lng + j * TILE_DEGREES],
-        [MERRILL_CLASSROOM.lat + (i + 1) * TILE_DEGREES,
-        MERRILL_CLASSROOM.lng + (j + 1) * TILE_DEGREES],
-    ]);
+    // const bounds = leaflet.latLngBounds([
+    //     [MERRILL_CLASSROOM.lat + i * constants.TILE_DEGREES,
+    //     MERRILL_CLASSROOM.lng + j * constants.TILE_DEGREES],
+    //     [MERRILL_CLASSROOM.lat + (i + 1) * constants.TILE_DEGREES,
+    //     MERRILL_CLASSROOM.lng + (j + 1) * constants.TILE_DEGREES],
+    // ]);
+
+    const bounds = board.getCellBounds(MERRILL_CLASSROOM, { i, j });
 
     const pit = leaflet.rectangle(bounds) as leaflet.Layer;
 
+    const coinsInPit = Math.floor(luck([i, j, "initialValue"].toString()) * 10);
+
+    const coinArray = [];
+
+    for (let n = 0; n < coinsInPit; n++) {
+        const uniqueCoin = new Coin(board.getCellForPoint(leaflet.latLng({ lat: i, lng: j })), n);
+        coinArray.push(uniqueCoin);
+    }
 
 
     pit.bindPopup(() => {
-        let value = Math.floor(luck([i, j, "initialValue"].toString()) * 100);
+        let value = Math.floor(luck([i, j, "initialValue"].toString()) * 10);
         const container = document.createElement("div");
         container.innerHTML = `
                 <div>There is a pit here at "${i},${j}". It has value <span id="value">${value}</span>.</div>
@@ -92,10 +101,20 @@ function makePit(i: number, j: number) {
     pit.addTo(map);
 }
 
-for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
-    for (let j = - NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-        if (luck([i, j].toString()) < PIT_SPAWN_PROBABILITY) {
-            makePit(i, j);
-        }
+// for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
+//     for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
+//         if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+//             console.log(i, j);
+//             makePit(i, j);
+//         }
+//     }
+// }
+
+const cells = board.getCellsNearPoint(MERRILL_CLASSROOM);
+for (const cell of cells) {
+    const { i, j } = cell;
+    if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+        console.log(cell.i, cell.j);
+        makePit(i, j);
     }
 }
