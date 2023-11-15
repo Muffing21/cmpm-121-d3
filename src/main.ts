@@ -101,20 +101,20 @@ function makePit(i: number, j: number) {
     pit.addTo(map);
 }
 
-// for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
-//     for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
-//         if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
-//             console.log(i, j);
-//             makePit(i, j);
-//         }
-//     }
-// }
-
-const cells = board.getCellsNearPoint(MERRILL_CLASSROOM);
-for (const cell of cells) {
-    const { i, j } = cell;
-    if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
-        console.log(cell.i, cell.j);
-        makePit(i, j);
+for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
+    for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
+        if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+            console.log(i, j);
+            makePit(i, j);
+        }
     }
 }
+
+// const cells = board.getCellsNearPoint(MERRILL_CLASSROOM);
+// for (const cell of cells) {
+//     const { i, j } = cell;
+//     if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+//         console.log(cell.i, cell.j);
+//         makePit(i, j);
+//     }
+// }

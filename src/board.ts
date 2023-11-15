@@ -30,7 +30,7 @@ export class Board {
     getCellForPoint(point: leaflet.LatLng): Cell {
         return this.getCanonicalCell({
             i: Math.floor(point.lat / this.tileWidth), j: Math.floor(point.lng / this.tileWidth)
-        }); // integer
+        });
     }
     // getCellBounds(playerLocation: Cell, cell: Cell): leaflet.LatLngBounds {
     //     const { i, j } = cell;
@@ -54,12 +54,9 @@ export class Board {
     getCellsNearPoint(point: leaflet.LatLng): Cell[] {
         const resultCells: Cell[] = [];
         const originCell = this.getCellForPoint(point);
-        if (originCell) {
-            for (let i = -this.tileVisibilityRadius; i < this.tileVisibilityRadius; i++) {
-                for (let j = -this.tileVisibilityRadius; j < this.tileVisibilityRadius; j++) {
-                    resultCells.push({ i, j });
-                    //leaflet.latLng({ lat: (i * this.tileWidth) + originCell.i, lng: (j * this.tileWidth) + originCell.j }))
-                }
+        for (let i = -this.tileVisibilityRadius; i < this.tileVisibilityRadius; i++) {
+            for (let j = -this.tileVisibilityRadius; j < this.tileVisibilityRadius; j++) {
+                resultCells.push(this.getCellForPoint(leaflet.latLng({ lat: (i * this.tileWidth) + originCell.i, lng: (j * this.tileWidth) + originCell.j })));
             }
         }
         return resultCells;
