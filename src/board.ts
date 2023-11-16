@@ -41,13 +41,13 @@ export class Board {
     //         [playerLong + (i + 1) * this.tileWidth, playerLocation.j + (j + 1) * this.tileWidth],
     //     ]);
     // }
-    getCellBounds(playerLocation: leaflet.LatLng, cell: Cell): leaflet.LatLngBounds {
+    getCellBounds(cell: Cell): leaflet.LatLngBounds {
         const { i, j } = cell;
-        const playerLat = playerLocation.lat;
-        const playerLong = playerLocation.lng;
+        // const playerLat = playerLocation.lat;
+        // const playerLong = playerLocation.lng;
         return new leaflet.LatLngBounds([
-            [playerLat + i * this.tileWidth, playerLong + j * this.tileWidth],
-            [playerLat + (i + 1) * this.tileWidth, playerLong + (j + 1) * this.tileWidth],
+            [i * this.tileWidth, j * this.tileWidth],
+            [(i + 1) * this.tileWidth, (j + 1) * this.tileWidth],
         ]);
     }
 
@@ -56,7 +56,7 @@ export class Board {
         const originCell = this.getCellForPoint(point);
         for (let i = -this.tileVisibilityRadius; i < this.tileVisibilityRadius; i++) {
             for (let j = -this.tileVisibilityRadius; j < this.tileVisibilityRadius; j++) {
-                resultCells.push(this.getCellForPoint(leaflet.latLng({ lat: (i * this.tileWidth) + originCell.i, lng: (j * this.tileWidth) + originCell.j })));
+                resultCells.push(this.getCanonicalCell({ i: i + originCell.i, j: j + originCell.j }));
             }
         }
         return resultCells;
