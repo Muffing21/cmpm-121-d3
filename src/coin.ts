@@ -6,6 +6,6 @@ export class Coin {
     }
 
     toString() {
-        return `Coin: ${this.originCell.i},${this.originCell.i}#${this.serial}<br />`;
+        return `Coin: ${this.originCell.i},${this.originCell.j}#${this.serial}<br/>`;
     }
 }
