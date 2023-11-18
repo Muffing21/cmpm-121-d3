@@ -120,9 +120,21 @@ function makeGeoCache(i: number, j: number) {
     pit.addTo(map);
 }
 
-function redraw() {
-    for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
-        for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
+for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
+    for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
+        if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+            cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
+            makeGeoCache(i, j);
+        }
+    }
+}
+
+let playerMoveX = 0;
+let playerMoveY = 0;
+
+function redraw(x: number, y: number) {
+    for (let i = -constants.NEIGHBORHOOD_SIZE + y; i < constants.NEIGHBORHOOD_SIZE + y; i++) {
+        for (let j = - constants.NEIGHBORHOOD_SIZE + x; j < constants.NEIGHBORHOOD_SIZE + x; j++) {
             if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
                 cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
                 makeGeoCache(i, j);
@@ -131,23 +143,27 @@ function redraw() {
     }
 }
 
-redraw();
+redraw(playerMoveX, playerMoveY);
 
 document.getElementById("north")?.addEventListener(("click"), () => {
     playerWalk("north");
-    redraw();
+    playerMoveY++;
+    redraw(playerMoveX, playerMoveY);
 });
 document.getElementById("south")?.addEventListener(("click"), () => {
     playerWalk("south");
-    redraw();
+    playerMoveY--;
+    redraw(playerMoveX, playerMoveY);
 });
 document.getElementById("west")?.addEventListener(("click"), () => {
     playerWalk("west");
-    redraw();
+    playerMoveX--;
+    redraw(playerMoveX, playerMoveY);
 });
 document.getElementById("east")?.addEventListener(("click"), () => {
     playerWalk("east");
-    redraw();
+    playerMoveX++;
+    redraw(playerMoveX, playerMoveY);
 });
 
 
