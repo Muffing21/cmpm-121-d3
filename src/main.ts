@@ -11,8 +11,10 @@ import { Coin } from "./coin.ts";
 
 
 const MERRILL_CLASSROOM = leaflet.latLng({
-    lat: 36.9995,
-    lng: - 122.0533
+    // lat: 36.9995,
+    // lng: - 122.0533
+    lat: 0,
+    lng: 0
 });
 
 const mapContainer = document.querySelector<HTMLElement>("#map")!;
@@ -54,7 +56,6 @@ function makeGeoCoins(i: number, j: number): Coin[] {
     for (let n = 0; n < coinsInPit; n++) {
         temp.push(new Coin({ i, j }, n));
     }
-    console.log(temp.toString());
     return temp;
 }
 
@@ -63,7 +64,7 @@ function makeGeoCoins(i: number, j: number): Coin[] {
 //     remove this coin from that cell inven
 //     update local storage
 
-// }
+// }    
 function collectCoin(coins: Coin[]) {
     const coin = coins.pop();
     if (coin) {
@@ -112,89 +113,57 @@ function makeGeoCache(i: number, j: number) {
         MERRILL_CLASSROOM.lng + (j + 1) * constants.TILE_DEGREES],
     ]);
 
-    const pit = leaflet.rectangle(bounds) as leaflet.Layer;
 
+    const pit = leaflet.rectangle(bounds) as leaflet.Layer;
     createButtons(pit, i, j);
 
     pit.addTo(map);
 }
 
-
-for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
-    for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
-        if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
-            cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
-            makeGeoCache(i, j);
+function redraw() {
+    for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
+        for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
+            if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
+                cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
+                makeGeoCache(i, j);
+            }
         }
     }
 }
 
+redraw();
 
-// function makePit(i: number, j: number) {
-//     const bounds = leaflet.latLngBounds([
-//         [MERRILL_CLASSROOM.lat + i * constants.TILE_DEGREES,
-//         MERRILL_CLASSROOM.lng + j * constants.TILE_DEGREES],
-//         [MERRILL_CLASSROOM.lat + (i + 1) * constants.TILE_DEGREES,
-//         MERRILL_CLASSROOM.lng + (j + 1) * constants.TILE_DEGREES],
-//     ]);
-
-//     const coinsInPit = Math.floor(luck([i, j, "initialValue"].toString()) * 10);
-//     for (let n = 0; n < coinsInPit; n++) {
-//         const uniqueCoin = new Coin({ i, j }, n);
-//         coinArray.push(uniqueCoin);
-//     }
-//     // const bounds = board.getCellBounds({ i, j });
-
-//     const pit = leaflet.rectangle(bounds) as leaflet.Layer;
-
-
-//     pit.bindPopup(() => {
-//         let value = Math.floor(luck([i, j, "initialValue"].toString()) * 10);
-//         const container = document.createElement("div");
-//         container.innerHTML = `
-//                 <div>There is a pit here at "${i},${j}". It has value <span id="value">${value}</span>.</div>
-//                 <button id="poke">poke</button>
-//                 <button id = "deposit">deposit</button>`;
-//         const poke = container.querySelector<HTMLButtonElement>("#poke")!;
-//         const deposit = container.querySelector<HTMLButtonElement>("#deposit")!;
-//         const noPitValue = 0;
-//         poke.addEventListener("click", () => {
-//             if (value > noPitValue) {
-//                 value--;
-//                 container.querySelector<HTMLSpanElement>("#value")!.innerHTML = value.toString();
-//                 points++;
-//                 statusPanel.innerHTML = `${points} points accumulated`;
-//             }
-//         });
-
-//         const noPoints = 0;
-//         deposit.addEventListener("click", () => {
-//             if (points > noPoints) {
-//                 value++;
-//                 container.querySelector<HTMLSpanElement>("#value")!.innerHTML = value.toString();
-//                 points--;
-//                 statusPanel.innerHTML = `${points} points accumulated`;
-//             }
-//         });
-//         return container;
-//     });
-//     pit.addTo(map);
-// }
-
-// function updateGeoCache(cell: Cell, pit: leaflet.Layer) {
-//     const cellI = cell.i;
-//     const cellJ = cell.j;
-//     pit.bindPopup(() => {
-//         // const value = coinsInPit;
-//         const container = document.createElement("div");
-//         container.innerHTML = `
-//                 <div>There is a pit here at "${cellI},${cellJ}". It has these coins: <span id="coinNum">${value}</span>.</div>
-//                 <button id="poke">poke</button>
-//                 <button id = "deposit">deposit</button>`;
-//         const poke = container.querySelector<HTMLButtonElement>("#poke")!;
-//         const deposit = container.querySelector<HTMLButtonElement>("#deposit")!;
+document.getElementById("north")?.addEventListener(("click"), () => {
+    playerWalk("north");
+    redraw();
+});
+document.getElementById("south")?.addEventListener(("click"), () => {
+    playerWalk("south");
+    redraw();
+});
+document.getElementById("west")?.addEventListener(("click"), () => {
+    playerWalk("west");
+    redraw();
+});
+document.getElementById("east")?.addEventListener(("click"), () => {
+    playerWalk("east");
+    redraw();
+});
 
 
-//         return container;
-//     });
-// }
+
+function playerWalk(direction: string) {
+    if (direction === "north") {
+        MERRILL_CLASSROOM.lat += constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(MERRILL_CLASSROOM);
+    } else if (direction === "south") {
+        MERRILL_CLASSROOM.lat -= constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(MERRILL_CLASSROOM);
+    } else if (direction === "west") {
+        MERRILL_CLASSROOM.lng -= constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(MERRILL_CLASSROOM);
+    } else if (direction === "east") {
+        MERRILL_CLASSROOM.lng += constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(MERRILL_CLASSROOM);
+    }
+}
