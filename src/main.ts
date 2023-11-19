@@ -8,6 +8,7 @@ import "./leafletWorkaround";
 import { Cell } from "./board.ts";
 import * as constants from "./constants";
 import { Coin } from "./coin.ts";
+// eslint-disable-next-line @typescript-eslint/naming-convention
 
 
 const MERRILL_CLASSROOM = leaflet.latLng({
@@ -59,12 +60,6 @@ function makeGeoCoins(i: number, j: number): Coin[] {
     return temp;
 }
 
-// function collect2(coin: Coin, cell: Cell) {
-//     add this coin to player inven
-//     remove this coin from that cell inven
-//     update local storage
-
-// }    
 function collectCoin(coins: Coin[]) {
     const coin = coins.pop();
     if (coin) {
@@ -105,6 +100,8 @@ function createButtons(pit: leaflet.Layer, i: number, j: number) {
     });
 }
 
+const playerLatLng: leaflet.LatLng[] = [MERRILL_CLASSROOM];
+
 function makeGeoCache(i: number, j: number) {
     const bounds = leaflet.latLngBounds([
         [MERRILL_CLASSROOM.lat + i * constants.TILE_DEGREES,
@@ -120,66 +117,75 @@ function makeGeoCache(i: number, j: number) {
     pit.addTo(map);
 }
 
-for (let i = -constants.NEIGHBORHOOD_SIZE; i < constants.NEIGHBORHOOD_SIZE; i++) {
-    for (let j = - constants.NEIGHBORHOOD_SIZE; j < constants.NEIGHBORHOOD_SIZE; j++) {
-        if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
-            cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
-            makeGeoCache(i, j);
-        }
-    }
+const bus = new EventTarget();
+
+type EventName = "player-moved";
+function notify(name: EventName) {
+    bus.dispatchEvent(new Event(name));
 }
+
+bus.addEventListener("player-moved", redraw);
 
 let playerMoveX = 0;
 let playerMoveY = 0;
 
-function redraw(x: number, y: number) {
-    for (let i = -constants.NEIGHBORHOOD_SIZE + y; i < constants.NEIGHBORHOOD_SIZE + y; i++) {
-        for (let j = - constants.NEIGHBORHOOD_SIZE + x; j < constants.NEIGHBORHOOD_SIZE + x; j++) {
+redraw();
+
+document.getElementById("north")?.addEventListener(("click"), () => {
+    playerWalk("north");
+    playerMoveY++;
+    notify("player-moved");
+});
+document.getElementById("south")?.addEventListener(("click"), () => {
+    playerWalk("south");
+    playerMoveY--;
+    notify("player-moved");
+});
+document.getElementById("west")?.addEventListener(("click"), () => {
+    playerWalk("west");
+    playerMoveX--;
+    notify("player-moved");
+});
+document.getElementById("east")?.addEventListener(("click"), () => {
+    playerWalk("east");
+    playerMoveX++;
+    notify("player-moved");
+});
+
+function redraw() {
+    for (let i = -constants.NEIGHBORHOOD_SIZE + playerMoveY; i < constants.NEIGHBORHOOD_SIZE + playerMoveY; i++) {
+        for (let j = - constants.NEIGHBORHOOD_SIZE + playerMoveX; j < constants.NEIGHBORHOOD_SIZE + playerMoveX; j++) {
             if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
                 cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
+                leaflet.polyline(playerLatLng, {
+                    stroke: true,
+                    color: "red",
+                    weight: 10,
+                    opacity: 10,
+                    smoothFactor: 1
+                }).addTo(map);
                 makeGeoCache(i, j);
             }
         }
     }
 }
 
-redraw(playerMoveX, playerMoveY);
-
-document.getElementById("north")?.addEventListener(("click"), () => {
-    playerWalk("north");
-    playerMoveY++;
-    redraw(playerMoveX, playerMoveY);
-});
-document.getElementById("south")?.addEventListener(("click"), () => {
-    playerWalk("south");
-    playerMoveY--;
-    redraw(playerMoveX, playerMoveY);
-});
-document.getElementById("west")?.addEventListener(("click"), () => {
-    playerWalk("west");
-    playerMoveX--;
-    redraw(playerMoveX, playerMoveY);
-});
-document.getElementById("east")?.addEventListener(("click"), () => {
-    playerWalk("east");
-    playerMoveX++;
-    redraw(playerMoveX, playerMoveY);
-});
-
-
-
 function playerWalk(direction: string) {
     if (direction === "north") {
         MERRILL_CLASSROOM.lat += constants.PLAYER_MOVE_DISTANCE;
+        playerLatLng.push(MERRILL_CLASSROOM);
         playerMarker.setLatLng(MERRILL_CLASSROOM);
     } else if (direction === "south") {
         MERRILL_CLASSROOM.lat -= constants.PLAYER_MOVE_DISTANCE;
+        playerLatLng.push(MERRILL_CLASSROOM);
         playerMarker.setLatLng(MERRILL_CLASSROOM);
     } else if (direction === "west") {
         MERRILL_CLASSROOM.lng -= constants.PLAYER_MOVE_DISTANCE;
+        playerLatLng.push(MERRILL_CLASSROOM);
         playerMarker.setLatLng(MERRILL_CLASSROOM);
     } else if (direction === "east") {
         MERRILL_CLASSROOM.lng += constants.PLAYER_MOVE_DISTANCE;
+        playerLatLng.push(MERRILL_CLASSROOM);
         playerMarker.setLatLng(MERRILL_CLASSROOM);
     }
 }
