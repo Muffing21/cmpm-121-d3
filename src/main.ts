@@ -131,8 +131,7 @@ function notify(name: EventName) {
 
 bus.addEventListener("player-moved", redraw);
 
-let playerMoveX = 0;
-let playerMoveY = 0;
+
 
 
 
@@ -159,6 +158,9 @@ document.getElementById("east")?.addEventListener(("click"), () => {
 
 let initialPolyLine = polyLine("red", 20, 20);
 map.addLayer(initialPolyLine);
+
+let playerMoveX = 0;
+let playerMoveY = 0;
 
 redraw();
 
