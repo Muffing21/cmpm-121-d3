@@ -18,6 +18,11 @@ const MERRILL_CLASSROOM = leaflet.latLng({
     lng: 0
 });
 
+const PLAYER_POSITION = leaflet.latLng({
+    lat: 0,
+    lng: 0
+});
+
 const mapContainer = document.querySelector<HTMLElement>("#map")!;
 
 const map = leaflet.map(mapContainer, {
@@ -29,7 +34,7 @@ const map = leaflet.map(mapContainer, {
     scrollWheelZoom: false
 });
 
-leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const bg = leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
 }).addTo(map);
@@ -100,7 +105,7 @@ function createButtons(pit: leaflet.Layer, i: number, j: number) {
     });
 }
 
-const playerLatLng: leaflet.LatLng[] = [MERRILL_CLASSROOM];
+const playerLatLng: leaflet.LatLng[] = [leaflet.latLng(PLAYER_POSITION.lat, PLAYER_POSITION.lng)];
 
 function makeGeoCache(i: number, j: number) {
     const bounds = leaflet.latLngBounds([
@@ -129,7 +134,7 @@ bus.addEventListener("player-moved", redraw);
 let playerMoveX = 0;
 let playerMoveY = 0;
 
-redraw();
+
 
 document.getElementById("north")?.addEventListener(("click"), () => {
     playerWalk("north");
@@ -152,18 +157,22 @@ document.getElementById("east")?.addEventListener(("click"), () => {
     notify("player-moved");
 });
 
+let initialPolyLine = polyLine("red", 20, 20);
+map.addLayer(initialPolyLine);
+
+redraw();
+
 function redraw() {
+    map.eachLayer(function (layer) {
+        if (layer != bg && layer != playerMarker && layer != initialPolyLine) {
+            map.removeLayer(layer);
+        }
+    });
     for (let i = -constants.NEIGHBORHOOD_SIZE + playerMoveY; i < constants.NEIGHBORHOOD_SIZE + playerMoveY; i++) {
         for (let j = - constants.NEIGHBORHOOD_SIZE + playerMoveX; j < constants.NEIGHBORHOOD_SIZE + playerMoveX; j++) {
             if (luck([i, j].toString()) < constants.PIT_SPAWN_PROBABILITY) {
                 cacheCoins.set([i, j].toString(), makeGeoCoins(i, j));
-                leaflet.polyline(playerLatLng, {
-                    stroke: true,
-                    color: "red",
-                    weight: 10,
-                    opacity: 10,
-                    smoothFactor: 1
-                }).addTo(map);
+                initialPolyLine = polyLine("black", 5, 5);
                 makeGeoCache(i, j);
             }
         }
@@ -172,20 +181,28 @@ function redraw() {
 
 function playerWalk(direction: string) {
     if (direction === "north") {
-        MERRILL_CLASSROOM.lat += constants.PLAYER_MOVE_DISTANCE;
-        playerLatLng.push(MERRILL_CLASSROOM);
-        playerMarker.setLatLng(MERRILL_CLASSROOM);
+        PLAYER_POSITION.lat += constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(PLAYER_POSITION);
     } else if (direction === "south") {
-        MERRILL_CLASSROOM.lat -= constants.PLAYER_MOVE_DISTANCE;
-        playerLatLng.push(MERRILL_CLASSROOM);
-        playerMarker.setLatLng(MERRILL_CLASSROOM);
+        PLAYER_POSITION.lat -= constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(PLAYER_POSITION);
     } else if (direction === "west") {
-        MERRILL_CLASSROOM.lng -= constants.PLAYER_MOVE_DISTANCE;
-        playerLatLng.push(MERRILL_CLASSROOM);
-        playerMarker.setLatLng(MERRILL_CLASSROOM);
+        PLAYER_POSITION.lng -= constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(PLAYER_POSITION);
     } else if (direction === "east") {
-        MERRILL_CLASSROOM.lng += constants.PLAYER_MOVE_DISTANCE;
-        playerLatLng.push(MERRILL_CLASSROOM);
-        playerMarker.setLatLng(MERRILL_CLASSROOM);
+        PLAYER_POSITION.lng += constants.PLAYER_MOVE_DISTANCE;
+        playerMarker.setLatLng(PLAYER_POSITION);
     }
+    playerLatLng.push(leaflet.latLng(PLAYER_POSITION.lat, PLAYER_POSITION.lng));
+}
+
+function polyLine(color: string, weight: number, opacity: number): leaflet.Polyline {
+    const temp = leaflet.polyline(playerLatLng, {
+        stroke: true,
+        color: color,
+        weight: weight,
+        opacity: opacity,
+        smoothFactor: 1
+    }).addTo(map);
+    return temp;
 }
