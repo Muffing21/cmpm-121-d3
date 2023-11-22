@@ -12,15 +12,15 @@ import { Coin } from "./coin.ts";
 
 
 const MERRILL_CLASSROOM = leaflet.latLng({
-    // lat: 36.9995,
-    // lng: - 122.0533
-    lat: 0,
-    lng: 0
+    lat: 36.9995,
+    lng: - 122.0533
+    // lat: 0,
+    // lng: 0
 });
 
 const PLAYER_POSITION = leaflet.latLng({
-    lat: 0,
-    lng: 0
+    lat: 36.9995,
+    lng: - 122.0533
 });
 
 const mapContainer = document.querySelector<HTMLElement>("#map")!;
